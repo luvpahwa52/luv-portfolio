@@ -122,5 +122,5 @@ export const projects: Project[] = [
     { step: 'Content', desc: 'MDX blog with frontmatter, reading time, related posts.' },
     { step: 'SEO', desc: 'Sitemap, RSS, OG metadata, Vercel deployment.' },
   ],
-},,
+},
 ]; 
