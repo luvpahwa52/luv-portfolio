@@ -1,0 +1,110 @@
+---
+title: "RAG Evaluation: The Missing Piece Everyone Skips"
+date: "2026-06-12"
+category: "AI"
+tags: ["rag", "evaluation", "llm-ops", "testing", "ai-engineering"]
+excerpt: "Most RAG tutorials show you how to build one. Almost none show you how to know if it's actually working. Here's a practical evaluation approach."
+description: "A practical guide to evaluating RAG systems with retrieval metrics, answer quality scoring, and lightweight LLM-as-judge patterns."
+keywords: ["RAG evaluation", "LLM evaluation", "RAG metrics", "retrieval evaluation", "AI testing"]
+---
+
+## TL;DR
+
+Most RAG tutorials end at "the chatbot answers questions!" That's not done — that's just the start. Without evaluation, you can't tell if your changes are improvements or regressions. Here's the lightweight evaluation setup I wish I'd built from day one.
+
+## Why "It Works on My Examples" Isn't Enough
+
+Every RAG developer goes through the same trap:
+
+1. Build chatbot
+2. Try 5 example questions
+3. Tweak prompt because answer #3 wasn't great
+4. Try same 5 questions again
+5. Ship
+
+The problem: you have **no idea** if your tweak helped questions you didn't test. Maybe answer #3 improved but answers #1 and #2 silently got worse. Without a test set, every change is a gamble.
+
+## The Three Things to Measure
+
+RAG evaluation breaks into three layers:
+
+### 1. Retrieval Quality
+
+Did the retriever surface the right documents? This is independent of the LLM.
+
+**Metrics:**
+
+- **Recall@k** — of the relevant docs, how many are in top-k?
+- **MRR (Mean Reciprocal Rank)** — how high up is the first relevant doc?
+- **Hit Rate** — was at least one relevant doc retrieved?
+
+### 2. Answer Quality
+
+Given the retrieved docs, did the LLM produce a good answer?
+
+**Metrics:**
+
+- **Faithfulness** — does the answer stick to the retrieved context, or hallucinate?
+- **Answer relevance** — does it actually address the question?
+- **Completeness** — does it cover the full answer or just part?
+
+### 3. End-to-End Quality
+
+The user's actual experience. Sometimes retrieval and answer both look fine in isolation but the combined output is bad.
+
+## Building a Lightweight Eval Set
+
+You don't need 1000 examples to start. **20 well-chosen examples beat 200 random ones.**
+
+Categorize them deliberately:
+
+- 30% common cases (the questions users actually ask)
+- 30% edge cases (exact codes, numbers, names)
+- 20% multi-doc (answer requires combining sources)
+- 20% adversarial (questions your bot probably fails on)
+
+## LLM-as-Judge for Answer Quality
+
+Manually grading answers doesn't scale. LLM-as-judge does. Use a **stronger model** as the judge than the one being evaluated. Use a **different model family** if possible to reduce bias.
+
+## The Workflow That Saved My Sanity
+
+Concretely:
+
+1. Snapshot current metrics as baseline
+2. Make one change (new chunking strategy, different model, new prompt)
+3. Run full eval
+4. Compare each metric — if anything dropped > 5%, investigate why
+5. If everything held or improved, ship the change
+
+Without this, I was making changes in the dark. With it, I could confidently iterate.
+
+## Common Pitfalls
+
+### Evaluating only on easy questions
+
+If all your eval examples are softballs, you'll feel great but your bot will fail on real users. Include questions you **expect** to fail.
+
+### Letting eval set leak into prompts
+
+If you keep tuning prompts using examples from your eval set, you're overfitting. Hold out a portion as "test set" that you only check periodically.
+
+### Trusting a single number
+
+A single "quality score" hides regressions. One category getting worse while another improves can cancel out. Always look at per-category breakdowns.
+
+## The Honest Truth
+
+Building a RAG system that demos well is easy. Building one you can confidently improve over time requires evaluation infrastructure. The 2 days I spent building eval saved weeks of "is this actually better?" guesswork.
+
+## Takeaways
+
+- 🎯 **No eval = no real iteration** — you're just guessing
+- 📏 **Measure retrieval and answer separately** — different failure modes
+- ⚖️ **LLM-as-judge scales** when manual grading doesn't
+- 📊 **20 good examples beat 200 random ones**
+- 🔬 **Hold out a test set** you don't tune against
+
+---
+
+*How do you evaluate your AI systems? Reach out via the contact section — I'd love to compare notes.*

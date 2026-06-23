@@ -1,0 +1,67 @@
+---
+title: "Why Hybrid Retrieval Made My RAG Chatbot Actually Useful"
+date: "2026-06-15"
+category: "AI"
+tags: ["azure", "rag", "chromadb", "bm25", "openai", "ocr"]
+excerpt: "Pure semantic search wasn't enough. Adding BM25 and OCR turned my Azure RAG chatbot from a toy into a tool people actually wanted to use."
+description: "How combining semantic search with BM25 and OCR-based PDF extraction transformed an Azure OpenAI RAG chatbot built with ChromaDB and Streamlit."
+keywords: ["hybrid retrieval RAG", "Azure OpenAI chatbot", "ChromaDB BM25", "RAG PDF OCR", "semantic search BM25"]
+---
+
+## TL;DR
+
+I built a RAG chatbot using **Azure OpenAI + ChromaDB + Streamlit**. Pure semantic search worked for fuzzy questions but failed on exact matches, names, error codes, and numbers. Adding **BM25 as a parallel retriever** plus **OCR for image-based PDFs** turned it from "interesting demo" into "actually useful tool." Here's the architecture and what I learned.
+
+## Why Pure Semantic Search Wasn't Enough
+
+The first version of my chatbot used only vector similarity search. It was great at fuzzy questions like "how does the deployment process work?" but terrible at specific lookups like "what's the error for code E-4471?"
+
+Vector embeddings treat exact codes, names, and numbers as just more tokens. They get blurred into surrounding context. For a knowledge base full of error codes, version numbers, and proper nouns, that's a deal-breaker.
+
+## The Hybrid Approach
+
+The fix: run **BM25** (the same algorithm Elasticsearch uses) in parallel with semantic search, then merge and re-rank the results.
+
+**Reciprocal Rank Fusion (RRF)** is criminally underrated for this — no parameter tuning, works out of the box, and combines rankings from any number of retrievers.
+
+## The OCR Problem
+
+A surprising chunk of real-world PDFs are **image-based** — scanned documents, screenshots embedded in reports, architecture diagrams with text. PyPDF can't read them. The chatbot was silently ignoring entire chapters of source material.
+
+Solution: detect image-heavy PDFs at ingestion and route them through **Tesseract OCR**. Coverage went from ~70% of source material to ~98%.
+
+## The UI Matters More Than You Think
+
+Streamlit gets a bad rap, but for internal tools it's exceptional. Two things made the UX feel polished:
+
+1. **Streaming responses** — users tolerate 5 seconds of streaming way better than 3 seconds of blank screen
+2. **Source citations** — every answer shows which documents it came from. This single feature made users **trust** the bot
+
+## Lessons Learned
+
+### Vector search is necessary but not sufficient
+
+For any knowledge base with technical content (codes, names, versions), you need keyword retrieval too. They cover different failure modes.
+
+### Ingestion is half the battle
+
+If your source documents aren't fully extracted, no amount of fancy retrieval helps. Spend real time on the boring parts: PDF parsing, table extraction, OCR fallback.
+
+### Citations build trust
+
+Users don't trust AI by default. Showing sources transforms a black box into a tool. It also makes you accountable — you can audit when the bot is wrong.
+
+### Streamlit ships fast
+
+For internal tools, Streamlit beats every other framework on time-to-prototype. The polish ceiling is lower than React, but for proof-of-concepts and internal apps it's hard to beat.
+
+## What I'd Do Differently
+
+- Start with hybrid retrieval from day one (not pure semantic)
+- Build the citation UI **before** improving model quality
+- Test on real "bad" PDFs (scanned, multi-column, tables) before declaring victory
+- Add eval dataset early — without it, "improvements" are vibes
+
+---
+
+*Building a RAG system? Reach out via the contact section — happy to share more architecture details.*

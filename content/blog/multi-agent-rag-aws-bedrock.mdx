@@ -1,0 +1,101 @@
+---
+title: "Building a Multi-Agent RAG System on AWS Bedrock: Lessons from a Travel Planner"
+date: "2026-06-18"
+category: "AI"
+tags: ["aws", "bedrock", "rag", "agentic-ai", "langchain", "claude"]
+excerpt: "Architecting a travel itinerary planner with multi-agent RAG on AWS Bedrock — the wins, the pitfalls, and the architecture decisions that mattered."
+description: "Deep dive into building a production multi-agent RAG system on AWS Bedrock with Claude, LangChain orchestration, and hybrid retrieval strategies."
+keywords: ["AWS Bedrock multi-agent", "RAG architecture", "agentic AI", "LangChain Bedrock", "multi-agent systems"]
+featured: true
+---
+
+## TL;DR
+
+I built a travel itinerary planner using **AWS Bedrock** as the foundation model layer, with **three specialized agents** handling destination research, budget planning, and itinerary assembly. The single-LLM approach hallucinated constantly. Multi-agent orchestration with hybrid retrieval cut hallucinations dramatically and gave me production-grade reliability. Here's what worked, what didn't, and the architecture decisions that mattered.
+
+## The Problem
+
+Single-LLM travel planners fail in predictable ways:
+
+- They invent hotels that don't exist
+- They confidently state wrong prices
+- They lose context between trip segments
+- They can't ground recommendations in real-world data
+
+I needed a system that could research destinations against real sources, plan budgets based on actual data, and assemble coherent multi-day itineraries without hallucinating.
+
+## The Architecture
+
+Instead of one monolithic LLM call, I split the workflow into specialized agents:
+
+​```ts
+const orchestrator = new AgentOrchestrator({
+  agents: [
+    new DestinationAgent({ model: 'anthropic.claude-3-5-sonnet' }),
+    new BudgetAgent({ model: 'anthropic.claude-3-haiku' }),
+    new ItineraryAgent({ model: 'anthropic.claude-3-5-sonnet' }),
+  ],
+  retrieval: 'hybrid',
+  memory: 'shared-context',
+});
+​```
+
+Each agent owned one job:
+
+- **Destination Agent** — researches places against a curated vector store
+- **Budget Agent** — runs cost calculations against structured data (cheap Haiku model)
+- **Itinerary Agent** — assembles the final day-by-day plan with full context
+
+## What Worked
+
+### Specialized agents beat single-LLM dramatically
+
+Single-LLM approaches treated every part of the request with equal attention. Specialized agents let me apply the right model to the right task — Sonnet for reasoning, Haiku for structured extraction. Quality went up, cost went down.
+
+### Hybrid retrieval caught edge cases
+
+Pure semantic search missed exact-match queries like specific hotel names or city codes. Adding **BM25** as a parallel retriever and combining the scores fixed it:
+
+​```ts
+const results = await Promise.all([
+  vectorStore.similaritySearch(query, k=5),
+  bm25Store.search(query, k=5),
+]);
+const merged = rerank(results.flat(), query);
+​```
+
+This single change improved factual accuracy more than any prompt engineering I tried.
+
+### Bedrock + Claude was the right foundation
+
+Claude's structured output handling was night-and-day better than the alternatives I tested. JSON-mode responses were reliable, tool use worked cleanly, and Bedrock's IAM integration meant zero secrets in code.
+
+## What Didn't Work (First Try)
+
+### Agent handoffs were brittle
+
+Initially, agents passed full conversation history between each other. Context exploded fast — by the third agent, prompts were 8K+ tokens and quality dropped. **Fix**: pass only structured summaries between agents, not raw history.
+
+### Latency was painful
+
+First version: ~30 seconds per request. Users would think the app was broken. **Fix**: parallelize independent agent calls, stream responses where possible, and cache deterministic lookups aggressively. Got it down to ~8 seconds.
+
+### Vector store costs scaled fast
+
+OpenSearch costs surprised me. **Fix**: aggressive caching layer in front of retrieval, plus pre-computing embeddings for high-traffic queries.
+
+## Takeaways
+
+- 🎯 **Multi-agent isn't always better** — only when tasks are genuinely distinct
+- ⚡ **Hybrid retrieval > pure semantic** for factual domains
+- 🛠 **Design for cost from day one** with Bedrock — token usage compounds
+- 🧠 **Pass summaries between agents**, not raw history
+- 📊 **Measure hallucination rate** like you'd measure latency — it's the real KPI
+
+## What's Next
+
+The current system handles single-user planning well. The interesting open problem is **multi-user collaborative planning** — two people with different preferences, shared budget, conflicting priorities. That's where agentic orchestration gets really interesting.
+
+---
+
+*Have questions about Bedrock or RAG architecture? Reach out via the contact section — always happy to chat.*
