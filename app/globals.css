@@ -475,3 +475,26 @@ h1, h2, h3, h4, h5, h6 {
 .border-border {
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
+/* ============================================
+   MOBILE — Terminal scroll & spacing fix
+   ============================================ */
+@media (max-width: 768px) {
+  /* Terminal: don't trap page scroll on touch */
+  .terminal-scroll {
+    overflow: visible !important;
+    max-height: none !important;
+    touch-action: pan-y;
+  }
+
+  /* Hero: give more bottom space so scroll indicator doesn't overlap terminal */
+  .hero-section {
+    padding-bottom: 6rem !important;
+    min-height: auto !important;
+  }
+
+  /* Hide the scroll indicator on mobile — it's redundant on touch devices
+     and causes overlap with the terminal */
+  .hero-section .scroll-indicator {
+    display: none !important;
+  }
+}
