@@ -61,7 +61,12 @@ export default function ProjectModal({
               </button>
             </div>
 
+            <div
+              data-lenis-prevent
+              className="flex-1 overflow-y-auto overscroll-contain"
+            >
             <CaseStudy project={project} />
+            </div>
           </motion.div>
         </motion.div>
       )}

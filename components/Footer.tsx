@@ -1,12 +1,14 @@
 'use client';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 const navLinks = [
-  { label: 'about', href: '#about' },
-  { label: 'work', href: '#work' },
-  { label: 'skills', href: '#skills' },
-  { label: 'blog', href: '#blog' },
-  { label: 'contact', href: '#contact' },
+  { label: 'about', id: 'about' },
+  { label: 'work', id: 'work' },
+  { label: 'skills', id: 'skills' },
+  { label: 'blog', id: 'blog', route: '/blog' },
+  { label: 'contact', id: 'contact' },
 ];
 
 const resourceLinks = [
@@ -59,6 +61,57 @@ const socials = [
 export default function Footer() {
   const year = new Date().getFullYear();
 
+  const router = useRouter();
+const pathname = usePathname();
+const [pendingScroll, setPendingScroll] = useState<string | null>(null);
+
+useEffect(() => {
+  if (pendingScroll && pathname === '/') {
+    let attempts = 0;
+    const tryScroll = () => {
+      if (pendingScroll === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setPendingScroll(null);
+        return;
+      }
+      const el = document.getElementById(pendingScroll);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setPendingScroll(null);
+      } else if (attempts < 40) {
+        attempts++;
+        setTimeout(tryScroll, 80);
+      } else {
+        setPendingScroll(null);
+      }
+    };
+    setTimeout(tryScroll, 120);
+  }
+}, [pathname, pendingScroll]);
+
+const handleSectionClick = (id: string, route?: string) => {
+  if (route) {
+    router.push(route);
+    return;
+  }
+  if (pathname !== '/') {
+    setPendingScroll(id);
+    router.push('/');
+  } else {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
+const handleBackToTop = () => {
+  if (pathname !== '/') {
+    setPendingScroll('home');
+    router.push('/');
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
   return (
     <footer className="relative border-t border-border/40 bg-[#0a0a0a]/40 backdrop-blur-sm mt-24">
       {/* top accent line */}
@@ -77,13 +130,16 @@ export default function Footer() {
         <div className="relative grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
           {/* brand + tagline */}
           <div className="md:col-span-5 space-y-4">
-            <a href="#home" className="font-mono text-lg flex items-center gap-2 group">
+            <button
+                onClick={handleBackToTop}
+                className="font-mono text-lg flex items-center gap-2 group cursor-pointer"
+                >
               <span className="text-accent">~/</span>
               <span className="text-fg group-hover:text-accent transition-colors">
                 luv.pahwa
               </span>
               <span className="w-[6px] h-[14px] bg-accent inline-block animate-pulse" />
-            </a>
+            </button>
             <p className="text-fg/60 text-sm leading-relaxed max-w-sm">
               Cloud & AI engineer building intelligent systems on AWS, Azure, and
               the open web. Currently shipping{' '}
@@ -107,19 +163,19 @@ export default function Footer() {
               navigate
             </p>
             <ul className="space-y-2.5">
-              {navLinks.map((l) => (
+                {navLinks.map((l) => (
                 <li key={l.label}>
-                  <a
-                    href={l.href}
-                    className="font-mono text-sm text-fg/70 hover:text-accent transition-colors inline-flex items-center gap-1.5 group"
-                  >
+                <button
+                    onClick={() => handleSectionClick(l.id, l.route)}
+                    className="font-mono text-sm text-fg/70 hover:text-accent transition-colors inline-flex items-center gap-1.5 group cursor-pointer text-left"
+                >
                     <span className="text-accent/40 group-hover:text-accent transition-colors">
-                      ./
+                    ./
                     </span>
                     {l.label}
-                  </a>
+                </button>
                 </li>
-              ))}
+            ))}
             </ul>
           </div>
 
@@ -191,21 +247,21 @@ export default function Footer() {
             <span className="text-fg/20">/</span>
             <span>tailwind v4</span>
             <span className="text-fg/20">/</span>
-            <a
-              href="#home"
-              className="inline-flex items-center gap-1.5 hover:text-accent transition-colors group"
-            >
-              back to top
-              <motion.span
-                animate={{ y: [0, -3, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                ↑
-              </motion.span>
-            </a>
+            <button
+                onClick={handleBackToTop}
+                className="font-mono inline-flex items-center gap-1 hover:text-accent transition-colors group cursor-pointer"
+                >
+                back to top
+                <motion.span
+                    animate={{ y: [0, -3, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                    ↑
+                </motion.span>
+                </button>
           </div>
         </div>
-      </div>
+    </div>
     </footer>
   );
 }

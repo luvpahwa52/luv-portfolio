@@ -111,7 +111,7 @@ export default function Hero() {
         variants={heroContainer}
         initial="hidden"
         animate={ready ? 'visible' : 'hidden'}
-        className="relative max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center"
+        className="relative max-w-6xl 2xl:max-w-[1500px] mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 2xl:gap-28 items-center"
       >
         
         {/* LEFT — poetic identity */}
@@ -126,8 +126,9 @@ export default function Hero() {
 
           {/* name */}
           <motion.h1
-            variants={heroItem}
-            className="hero-name font-mono text-6xl md:text-7xl lg:text-8xl font-bold leading-[0.95] tracking-tight text-white"
+          variants={heroItem}
+          className="hero-name font-mono font-bold leading-[0.9] tracking-tight text-white"
+          style={{ fontSize: 'clamp(3.5rem, 9vw, 10rem)' }}
           >
             Luv
             <br />
@@ -137,7 +138,10 @@ export default function Hero() {
           {/* role */}
           <motion.div variants={heroItem} className="flex items-center gap-3">
             <span className="h-px w-10 bg-accent" />
-            <p className="font-mono text-base md:text-lg text-white/85">
+            <p
+              className="font-mono text-white/85"
+              style={{ fontSize: 'clamp(1rem, 1.2vw, 1.5rem)' }}
+            >
               {profile.role}
             </p>
           </motion.div>
@@ -151,7 +155,8 @@ export default function Hero() {
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, y: -6, filter: 'blur(6px)' }}
                 transition={{ duration: 0.6 }}
-                className="hero-tagline absolute inset-0 text-base md:text-lg text-white/70 italic font-light"
+                className="hero-tagline absolute inset-0 text-white/70 italic font-light"
+                style={{ fontSize: 'clamp(1rem, 1.2vw, 1.5rem)' }}
               >
                 {POETIC_LINES[lineIdx]}
               </motion.p>
