@@ -1,10 +1,11 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { profile } from '@/lib/data';
 import Terminal from './Terminal';
 import HeroAmbient from './HeroAmbient';
+import { motion, type Variants } from "framer-motion";
 
 const POETIC_LINES = [
   'building intelligent systems on the cloud.',
@@ -23,7 +24,7 @@ const STATUS_ROTATIONS = [
 
 // === Cinematic entry — runs AFTER intro finishes ===
 // Container variants stagger the children for a layered bloom
-const heroContainer = {
+const heroContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -34,7 +35,7 @@ const heroContainer = {
   },
 };
 
-const heroItem = {
+const heroItem: Variants = {
   hidden: { opacity: 0, y: 24, filter: 'blur(12px)' },
   visible: {
     opacity: 1,
