@@ -3,6 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+
+const unlockScroll = () => {
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+};
+
 export default function CinematicIntro() {
   const [show, setShow] = useState(false);
   const [phase, setPhase] = useState(0);
@@ -13,7 +19,7 @@ export default function CinematicIntro() {
     // play once per tab session
     if (sessionStorage.getItem('intro-played')) {
       setShow(false);
-      document.documentElement.style.overflow = '';
+      unlockScroll();
       return;
     }
 
@@ -30,6 +36,8 @@ export default function CinematicIntro() {
     const t5 = setTimeout(() => {
       setShow(false);
       document.body.style.overflow = '';
+      unlockScroll();
+      sessionStorage.setItem('intro-done', '1');
     }, 4000);
 
     // safety net — force unlock no matter what
